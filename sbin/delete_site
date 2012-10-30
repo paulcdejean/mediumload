@@ -7,15 +7,26 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("domain", help="The domain name of the site you're destroying.")
-parser.add_argument("server", help="The server you're deploying to.")
+parser.add_argument("--server", help="The server you're deploying to.")
 args = parser.parse_args()
-
-domain = args.domain
-server = args.server
-
 
 # Constants.
 fpm_configs = "/usr/local/var/php5-fpm/"
+
+# Connect to the sites database.
+site_db = MySQLdb.connect(user = "teamcity", passwd="vAPDUgqR9J39", db="sites")
+site_c = site_db.cursor()
+
+domain = args.domain
+if args.server != None:
+	server = args.server
+else:
+	site_c.execute("select web_server from clients where domain = %s;", domain)
+	if site_c.rowcount == 0:
+		print "Sorry I don't know where that site is."
+		exit(1)
+	else:
+		server = site_c.fetchone()[0]
 
 # Connect.
 c = ssh(server)
@@ -35,6 +46,4 @@ c.do("userdel -r {0}".format(domain))
 c.close()
 
 # Delete the database entry.
-site_db = MySQLdb.connect(user = "teamcity", passwd="vAPDUgqR9J39", db="sites")
-site_c = site_db.cursor()
 site_c.execute("delete from clients where domain = %s;", domain)
