@@ -1,0 +1,77 @@
+#!/usr/bin/python
+import MySQLdb
+import os
+from subprocess import call
+from ssh import ssh
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("repo", help="The software that you're deploying.")
+parser.add_argument("domain", help="The domain name of the site you're creating.")
+parser.add_argument("--tag", help="The version of the software that you're deploying.")
+parser.add_argument("--server", help="The server you're deploying to.")
+args = parser.parse_args()
+
+repo = args.repo
+domain = args.domain
+if args.tag == None:
+	tag = "master"
+else:
+	tag = args.tag
+if args.server == None:
+	server = repo
+else:
+	server = args.server
+
+# Constants.
+fpm_configs = "/usr/local/var/php5-fpm/"
+
+# We want to figure out what magic number to use for this new site.
+site_db = MySQLdb.connect(user = "teamcity", passwd="vAPDUgqR9J39", db="appcenter123")
+site_c = site_db.cursor()
+site_c.execute("select magic_number from clients;")
+available_magic_numbers = range(50000, 60000)
+for row in site_c:
+	available_magic_numbers.remove(row[0])
+
+# This is the smallest magic number that isn't used.
+magic_number =  min(available_magic_numbers)
+
+# Connect.
+s = ssh(server)
+
+# Setup the user.
+status = s.do("useradd -b /var/www -g sites -s /bin/bash -u {0} {1}".format(magic_number, domain))
+if status != 0:
+	exit(1)	
+s.do("mkdir /var/www/{0}".format(domain))
+
+# Deploy the files and fix permissions.
+os.chdir("/usr/local/var/repositories/" + repo)
+status = 0
+status += call(["git", "checkout", "master"])
+status += call(["git", "pull"])
+status += call(["git", "checkout", "-q", tag])
+status += call(["git", "reset", "--hard", "HEAD"])
+if status != 0:
+	print "Git error."
+	exit(1)
+call(["rsync", "-rvc", "--exclude=/.git/", ".", "{0}:/var/www/{1}".format(server, domain)])
+s.do("chown -R {0}:daemon /var/www/{0}".format(domain))
+s.do("chmod o-rx /var/www/{0}".format(domain))
+
+# Deploy the php-fpm configuration and fix its permissions.
+s.do("mkdir {1}{0}".format(domain, fpm_configs))
+s.put("/usr/local/etc/php-fpm.conf", "{1}{0}/php-fpm.conf".format(domain, fpm_configs))
+s.do("sed -i -e 's/%DOMAIN%/{0}/g' -e 's/%MAGIC_NUMBER%/{1}/' '{2}{0}/php-fpm.conf'".format(domain, magic_number, fpm_configs))
+s.do("chown -R {0}:sites {1}{0}".format(domain, fpm_configs))
+s.do("chmod og-rx {1}{0}".format(domain, fpm_configs))
+
+# Start up php-fpm for this user.
+s.do("sudo -u {0} /usr/sbin/php5-fpm -c {1}{0}/php.ini -y {1}{0}/php-fpm.conf".format(domain, fpm_configs))
+s.do("echo '{0} {1}' >> '{2}portmap.txt'".format(domain, magic_number, fpm_configs))
+s.do("httxt2dbm -v -i {0}portmap.txt -o {0}portmap.dbm".format(fpm_configs))
+s.close()
+
+# Add the site to the database.
+site_c.execute("insert into clients (domain, magic_number, repository, web_server) values(%s, %s, %s, %s)", (domain, magic_number, repo, server))
