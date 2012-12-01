@@ -1,87 +1,6 @@
 #!/usr/bin/python
-import MySQLdb
-import os
-import subprocess
-from ssh import ssh
 import argparse
-
-class Deployment:
-	"""A deployment of a appcenter app."""
-	# Constants.
-	db_name = "appcenter123"
-	db_user = "teamcity"
-	db_password = "vAPDUgqR9J39"
-	fpm_configs = "/usr/local/var/php5-fpm/"
-
-	# Connection.
-	database_connection = None
-	c = None
-
-	# Core values.
-	reseller_id = None
-	app_id = None
-	commit_id = None
-	domain = None
-	magic_number = None
-	server_web_id = None
-
-	# Cached values.
-	remote_repo = None
-	local_repo = None
-	server_web_dns = None
-
-	def database_connect(self):
-		if not self.database_connection:
-			self.database_connection = MySQLdb.connect(user = self.db_user,
-			                                           passwd = self.db_password,
-			                                           db = self.db_name)
-			self.c = self.database_connection.cursor()
-
-	def update_local_repo(self):
-		return 0
-
-	def get_local_repo(self):
-		return "/usr/local/var/repositories/civicrm"
-
-	def __init__(self, domain):
-		"""Gets an existing deployment from the deployment database"""
-		self.database_connect()
-
-	def __init__(self, domain, reseller, app, server=None, version=None):
-		"""Creates a instance from the supplied values, ready for deployment."""
-		self.database_connect()
-		if not server:
-			server = app
-		if not version:
-			version = "master"
-
-		# Fill in the reseller_id.
-		self.c.execute("select id from resellers where domain = %s;", reseller)
-		self.reseller_id = self.c.fetchone()[0]
-
-		# Fill in the app_id.
-		self.c.execute("select id from apps where name = %s;", app)
-		self.app_id = self.c.fetchone()[0]
-
-		# Fill in the commit_id.
-		self.update_local_repo()
-		os.chdir(self.get_local_repo())
-		proc = subprocess.Popen(["git", "log", "-n", "1", version], stdout = subprocess.PIPE)
-		self.commit_id = proc.stdout.read(47)[7:47]
-
-		# Fill in the domain.
-		self.domain = domain
-
-		# Fill in the magic number with the smallest magic number that isn't used.
-		available_magic_numbers = range(50000, 60000)
-		self.c.execute("select magic_number from deployments;")
-		for row in self.c:
-			available_magic_numbers.remove(row[0])
-		self.magic_number =  min(available_magic_numbers)
-
-		# Fill in the server_web_id.
-		print self.reseller_id
-		print self.magic_number
+import deployment
 
 # Arguments.
 parser = argparse.ArgumentParser()
@@ -93,4 +12,5 @@ parser.add_argument("--server", help="The server you're deploying to.")
 
 args = parser.parse_args()
 
-newguy = Deployment(args.domain, args.reseller, args.app)
+newguy = deployment.deployment(args.domain, args.reseller, args.app)
+newguy.deploy_to_production()

@@ -1,0 +1,44 @@
+#!/bin/bash
+
+PATH=$HOME/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin:/usr/local/bin:/usr/local/sbin:/usr/games:.
+export PATH HOME TERM
+
+# Fix the .htaccess file.
+ex "/home/$domain/public_html/.htaccess" <<< "%s/# RewriteBase \/drupal/RewriteBase \/\~$domain/ | w"
+
+# Use curl to automagically go through the installation process.
+form_build_id="form-`dd if=/dev/urandom bs=64 count=1 | sha256sum | sed -e 's@+@-@' -e 's@/@_@' -e 's@=@@'`"
+curl -c /home/$domain/cookie-jar -d "mysql%5Bdatabase%5D=$dbname&mysql%5Busername%5D=$dbuser&mysql%5Bpassword%5D=$password&mysql%5Bhost%5D=$dbserver&mysql%5Bport%5D=&mysql%5Bdb_prefix%5D=&form_build_id=form-$form_build_id&form_id=install_settings_form&op=Save+and+continue" "civicrm${dev}.officegps.com/~$domain/install.php?profile=minimal&locale=en" > /dev/null
+curl -b /home/$domain/cookie-jar "civicrm${dev}.officegps.com/~$domain/install.php?profile=minimal&locale=en&op=start&id=1" > /dev/null
+# Need to send this six times for thingy to install?
+curl -b /home/$domain/cookie-jar -d "" "civicrm${dev}.officegps.com/~$domain/install.php?profile=minimal&locale=en&id=1&op=do"
+echo ""
+curl -b /home/$domain/cookie-jar -d "" "civicrm${dev}.officegps.com/~$domain/install.php?profile=minimal&locale=en&id=1&op=do"
+echo ""
+curl -b /home/$domain/cookie-jar -d "" "civicrm${dev}.officegps.com/~$domain/install.php?profile=minimal&locale=en&id=1&op=do"
+echo ""
+curl -b /home/$domain/cookie-jar -d "" "civicrm${dev}.officegps.com/~$domain/install.php?profile=minimal&locale=en&id=1&op=do"
+echo ""
+curl -b /home/$domain/cookie-jar -d "" "civicrm${dev}.officegps.com/~$domain/install.php?profile=minimal&locale=en&id=1&op=do"
+echo ""
+curl -b /home/$domain/cookie-jar -d "" "civicrm${dev}.officegps.com/~$domain/install.php?profile=minimal&locale=en&id=1&op=do"
+echo ""
+curl -b /home/$domain/cookie-jar -d "" "civicrm${dev}.officegps.com/~$domain/install.php?profile=minimal&locale=en&id=1&op=do"
+echo ""
+curl -b /home/$domain/cookie-jar -d "" "civicrm${dev}.officegps.com/~$domain/install.php?profile=minimal&locale=en&id=1&op=do"
+echo ""
+curl -b /home/$domain/cookie-jar -d "" "civicrm${dev}.officegps.com/~$domain/install.php?profile=minimal&locale=en&id=1&op=do"
+echo ""
+curl -b /home/$domain/cookie-jar -d "" "civicrm${dev}.officegps.com/~$domain/install.php?profile=minimal&locale=en&id=1&op=do"
+echo ""
+form_build_id="form-`dd if=/dev/urandom bs=64 count=1 | sha256sum | sed -e 's@+@-@' -e 's@/@_@' -e 's@=@@'`"
+curl -b /home/$domain/cookie-jar -d "site_name=$domain&site_mail=noreply%40$domain&account%5Bname%5D=$adminuser&account%5Bmail%5D=$domain%40officegps.com&account%5Bpass%5D%5Bpass1%5D=$password&account%5Bpass%5D%5Bpass2%5D=$password&site_default_country=$country_code&clean_url=1&date_default_timezone=America%2FNew_York&update_status_module%5B1%5D=1&form_build_id=$form_build_id&form_id=install_configure_form&op=Save+and+continue" "civicrm${dev}.officegps.com/~$domain/install.php?profile=minimal&locale=en" > /dev/null
+
+cividb="${dbname%_*}_civicrm"
+mysql -h "$dbserver" -u "$dbadmin" --password="$dbpass" -e "create database $cividb;
+grant all privileges on $cividb.* to '$dbuser'@'$appserver';"
+
+# Fix the idiot permissions to make installing civicrm possible. Then install CiviCRM.
+chmod u+w /home/$domain/public_html/sites/default
+echo "Installing CiviCRM. This takes a while."
+curl -d "go=Installing+CiviCRM...&database=MySQLDatabase&mysql%5Bserver%5D=$dbserver&mysql%5Busername%5D=$dbuser&mysql%5Bpassword%5D=$password&mysql%5Bdatabase%5D=$cividb&drupal%5Bserver%5D=$dbserver&drupal%5Busername%5D=$dbuser&drupal%5Bpassword%5D=$password&drupal%5Bdatabase%5D=$dbname&seedLanguage=en_US" "civicrm${dev}.officegps.com/~$domain/sites/all/modules/civicrm/install/index.php" > /dev/null

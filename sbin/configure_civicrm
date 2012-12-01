@@ -1,0 +1,144 @@
+#!/usr/bin/python
+import argparse
+import uuid
+import random
+import string
+import StringIO
+import hashlib
+from urllib import urlencode
+import subprocess
+
+import deployment
+
+# The info we must collect.
+drupal_dbserver = None
+drupal_dbport = None
+drupal_dbname = None
+drupal_dbuser = None
+drupal_dbpass = None
+
+civicrm_dbserver = None
+civicrm_dbport = None
+civicrm_dbname = None
+civicrm_dbuser = None
+civicrm_dbpass = None
+
+site_email = None
+site_language = None
+site_timezone = None
+site_country = None
+
+admin_user = None
+admin_pass = None
+admin_email = None
+
+clean_urls = None
+
+# Constants.
+mysql_default_port = 3306
+admin_username = "admin"
+
+def random_pass():
+	return ''.join(random.choice(string.lowercase) for i in range(15))
+
+# Argument parsing.
+parser = argparse.ArgumentParser()
+parser.add_argument("--domain", help="The domain we are configuring civicrm for.", required=True)
+parser.add_argument("--dbpass", help="The password of the database. Random if blank.")
+args = parser.parse_args()
+
+# Gets some basic info.
+site = deployment.deployment(args.domain)
+magic = site.get_magic_number()
+
+# Filling out the needed data.
+# Policy: https://docs.google.com/a/appcenter123.com/spreadsheet/ccc?key=0Al409h-B64ZYdE9NTmxMMjN5ZGxLQ0xnc002dzlJZkE
+drupal_dbserver = site.get_default_database_server_address()
+drupal_dbport = mysql_default_port
+drupal_dbname = str(magic) + "_drupal"
+drupal_dbuser = magic
+
+if not args.dbpass:
+	drupal_dbpass = random_pass()
+else:
+	drupal_dbpass = args.dbpass
+
+civicrm_dbserver = drupal_dbserver
+civicrm_dbport = drupal_dbport
+civicrm_dbname = str(magic) + "_civicrm"
+civicrm_dbuser = drupal_dbuser
+civicrm_dbpass = drupal_dbpass
+
+site_email = "info@" + args.domain
+site_language = "en"
+site_timezone = "America/New_York"
+site_country = "US"
+
+admin_user = admin_username
+admin_pass = "12345"
+admin_email = args.domain + "@civicrm.appcenter123.com"
+
+clean_urls = "0"
+
+# Do the database nonsnse.
+
+# Do the curl nonsense.
+form_build_hash = hashlib.sha256()
+form_build_hash.update(random_pass())
+form_build_id = "form-" + form_build_hash.hexdigest()
+
+database_config_form = {
+                         "mysql[database]" : drupal_dbname,
+                         "mysql[username]" : drupal_dbuser,
+                         "mysql[password]" : drupal_dbpass,
+                         "mysql[host]" : drupal_dbserver,
+                         "mysql[port]" : drupal_dbport,
+                         "mysql[db_prefix]" : "",
+                         "form_build_id" : form_build_id,
+                         "form_id" : "install_settings_form",
+                         "op" : "Save and continue",
+                       }
+
+form_build_hash.update(random_pass())
+form_build_id = "form-" + form_build_hash.hexdigest()
+
+drupal_config_form = {
+                       "site_name" : args.domain,
+                       "site_mail" : site_email,
+                       "account[name]" : admin_user,
+                       "account[mail]" : admin_email,
+                       "account[pass][pass1]" : admin_pass,
+                       "account[pass][pass2]" : admin_pass,
+                       "site_default_country" : site_country,
+                       "clean_url" : clean_urls,
+                       "date_default_timezone" : site_timezone,
+                       "update_status_module[1]" : "1",
+                       "form_build_id" : form_build_id,
+                       "form_id" : "install_configure_form",
+                       "op" : "Save and continue",
+                     }
+
+civicrm_config_form = {
+                        "go" : "Installing CiviCRM...",
+                        "database" : "MySQLDatabase",
+                        "mysql[server]" : civicrm_dbserver,
+                        "mysql[username]" : civicrm_dbuser,
+                        "mysql[password]" : civicrm_dbpass,
+                        "mysql[database]" : civicrm_dbname,
+                        "drupal[server]" : drupal_dbserver,
+                        "drupal[username]" : drupal_dbuser,
+                        "drupal[password]" : drupal_dbpass,
+                        "drupal[database]" : drupal_dbname,
+                        "seedLanguage" : "en_US",
+}
+
+subprocess.call(["curl", "-c", "/tmp/cookie-jar", "-d", urlencode(database_config_form), "http://civicrm.appcenter123.com/" + args.domain + "/install.php?profile=minimal&locale=en"])
+
+subprocess.call(["curl", "-b", "/tmp/cookie-jar", "-d", "", "http://civicrm.appcenter123.com/" + args.domain + "/install.php?profile=minimal&locale=en&op=start&id=1"])
+
+for _ in xrange(4):
+	subprocess.call(["curl", "-b", "/tmp/cookie-jar", "-d", "", "http://civicrm.appcenter123.com/" + args.domain + "/install.php?profile=minimal&locale=en&id=1&op=do"])
+
+subprocess.call(["curl", "-b", "/tmp/cookie-jar", "-d", urlencode(drupal_config_form), "http://civicrm.appcenter123.com/" + args.domain + "/install.php?profile=minimal&locale=en"])
+
+subprocess.call(["curl", "-d", urlencode(civicrm_config_form), "http://civicrm.appcenter123.com/" + args.domain + "/sites/all/modules/civicrm/install/index.php"])
