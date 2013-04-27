@@ -9,6 +9,7 @@ class ssh:
     def __init__(self, remote):
 	self.connection = paramiko.SSHClient()
 	self.connection.load_system_host_keys()
+	print remote
 	self.connection.connect(remote)
 
 	self.sftp = paramiko.SFTPClient.from_transport(self.connection.get_transport())

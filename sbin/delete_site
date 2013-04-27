@@ -41,9 +41,11 @@ c.do("kill $(cat {0}{1}/running.pid)".format(fpm_configs, domain))
 # Delete the fpm folder.
 c.do("rm -r {0}{1}".format(fpm_configs, domain))
 
-# Delete the user.
+# Delete the user and files.
 c.do("userdel -r {0}".format(domain))
 c.close()
 
 # Delete the database entry.
 site_c.execute("delete from clients where domain = %s;", domain)
+
+# Delete the databases.

@@ -23,6 +23,7 @@ class deployment:
 	domain = None
 	magic_number = None
 	server_web_id = None
+	app_name = None
 
 	# Cached values.
 	remote_repo = None
@@ -60,6 +61,7 @@ class deployment:
 		# Fill in the app_id.
 		self.c.execute("select id from apps where name = %s;", app)
 		self.app_id = self.c.fetchone()[0]
+		self.app_name = app
 
 		# Fill in the commit_id.
 		os.chdir(self._get_local_repo())
@@ -71,7 +73,7 @@ class deployment:
 
 		# Fill in the magic number with the smallest magic number that isn't used.
 		available_magic_numbers = range(50000, 60000)
-		self.c.execute("select magic_number from deployments where magic_number != NULL;")
+		self.c.execute("select magic_number from deployments where magic_number is not null;")
 		for row in self.c:
 			available_magic_numbers.remove(row[0])
 		self.magic_number =  min(available_magic_numbers)
@@ -89,7 +91,7 @@ class deployment:
 			self.c = self.database_connection.cursor()
 
 	def _get_local_repo(self):
-		return "/usr/local/var/repositories/civicrm"
+		return "/usr/local/var/repositories/" + self.app_name
 
 	def _get_web_server(self):
 		if not self.server_web_dns:
@@ -131,6 +133,7 @@ class deployment:
 		s = ssh(self._get_web_server())
 		status = s.do("useradd -b /var/www -g sites -s /bin/bash -u {0} {1}".format(self.magic_number, self.domain))
 		if status != 0:
+			print "useradd -b /var/www -g sites -s /bin/bash -u {0} {1}".format(self.magic_number, self.domain)
 			print "useradd error."
 		        exit(1)
 		s.do("mkdir /var/www/{0}".format(self.domain))
@@ -155,6 +158,9 @@ class deployment:
 		s.do("sudo -u {0} /usr/sbin/php5-fpm -c {1}{0}/php.ini -y {1}{0}/php-fpm.conf".format(self.domain, self.fpm_configs))
 		s.do("echo '{0} {1}' >> '{2}portmap.txt'".format(self.domain, self.magic_number, self.fpm_configs))
 		s.do("httxt2dbm -v -i {0}portmap.txt -o {0}portmap.dbm".format(self.fpm_configs))
+
+		# TEMP TEMP TEMP TEMP TEMP TEMP TEMP TEMP TEMP TEMP TEMP TEMP
+		s.do("rm /tmp/include_path.log")
 		s.close()
 
 		self._add_to_database()

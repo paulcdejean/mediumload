@@ -1,13 +1,14 @@
 #!/usr/bin/python
 import argparse
-import uuid
 import random
 import string
 import StringIO
 import hashlib
 from urllib import urlencode
 import subprocess
+import MySQLdb
 
+from ssh import ssh
 import deployment
 
 # The info we must collect.
@@ -50,6 +51,7 @@ args = parser.parse_args()
 # Gets some basic info.
 site = deployment.deployment(args.domain)
 magic = site.get_magic_number()
+print magic, "is the magic number"
 
 # Filling out the needed data.
 # Policy: https://docs.google.com/a/appcenter123.com/spreadsheet/ccc?key=0Al409h-B64ZYdE9NTmxMMjN5ZGxLQ0xnc002dzlJZkE
@@ -81,6 +83,13 @@ admin_email = args.domain + "@civicrm.appcenter123.com"
 clean_urls = "0"
 
 # Do the database nonsnse.
+db = MySQLdb.connect(user = "appcenter123", passwd = "october2012", host = "appsdb")
+dbc = db.cursor()
+dbc.execute("create database `{0}`;".format(drupal_dbname))
+dbc.execute("create database `{0}`;".format(civicrm_dbname))
+dbc.execute("grant all on `{0}`.* to `{1}` identified by '{2}';".format(drupal_dbname, drupal_dbuser, drupal_dbpass))
+dbc.execute("grant all on `{0}`.* to `{1}` identified by '{2}';".format(civicrm_dbname, civicrm_dbuser, civicrm_dbpass))
+dbc.execute("flush privileges;")
 
 # Do the curl nonsense.
 form_build_hash = hashlib.sha256()
@@ -136,9 +145,16 @@ subprocess.call(["curl", "-c", "/tmp/cookie-jar", "-d", urlencode(database_confi
 
 subprocess.call(["curl", "-b", "/tmp/cookie-jar", "-d", "", "http://civicrm.appcenter123.com/" + args.domain + "/install.php?profile=minimal&locale=en&op=start&id=1"])
 
-for _ in xrange(4):
+for _ in xrange(7):
 	subprocess.call(["curl", "-b", "/tmp/cookie-jar", "-d", "", "http://civicrm.appcenter123.com/" + args.domain + "/install.php?profile=minimal&locale=en&id=1&op=do"])
 
 subprocess.call(["curl", "-b", "/tmp/cookie-jar", "-d", urlencode(drupal_config_form), "http://civicrm.appcenter123.com/" + args.domain + "/install.php?profile=minimal&locale=en"])
 
 subprocess.call(["curl", "-d", urlencode(civicrm_config_form), "http://civicrm.appcenter123.com/" + args.domain + "/sites/all/modules/civicrm/install/index.php"])
+
+s = ssh(site._get_web_server())
+try:
+	command = "sudo -u {0} tar -zxvf /var/www/{0}/sites/all/modules/civicrm-4.2.4-l10n.tar.gz -C /var/www/{0}/sites/all/modules/".format(args.domain)
+except:
+	print command
+s.do(command)

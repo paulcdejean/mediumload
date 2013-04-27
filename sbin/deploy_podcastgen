@@ -1,0 +1,15 @@
+#!/usr/bin/python
+import argparse
+import subprocess
+
+import deployment
+
+# Arguments.
+parser = argparse.ArgumentParser()
+parser.add_argument("--reseller", help="The reseller who is deploying the app.", required=True)
+parser.add_argument("--domain", help="The domain name of the site you're creating.", required=True)
+
+args = parser.parse_args()
+
+newguy = deployment.deployment(args.domain, args.reseller, "podcastgen")
+newguy.deploy_to_production()
