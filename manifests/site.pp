@@ -1,2 +1,1 @@
-include apache24
-include phpfpm
+include mediumload
