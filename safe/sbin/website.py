@@ -4,6 +4,7 @@
 import subprocess
 import traceback
 import os
+import signal
 
 # Medium load modules.
 import mediumcore
@@ -16,24 +17,37 @@ class website:
         __port      The port that the php-fpm process for the website listens on.
         __user      The user id of the user the php-fpm process runs as.
         __url       The url of the website, and the name of the folder it occupies.
+        __config    The folder where the php-fpm configuration files are.
 
     Cached values:
         __valid     Whether or not the site is valid and can be setup.
         __setup     Whether or not the site has been setup.
-       __db        A handle to the medium load database.
+       __db         A handle to the medium load database.
 
     Knobs:
-        __min_user  The minimum number mediumload will select for a website user id.
-        __max_user  The maximum number mediumload will select for a website user id.
-        __min_port  The minimum number mediumload will select for a website listening port.
-        __max_port  The maximum number mediumload will select for a website listening port.
-        __docroot   The document root in apache.
-        __portmap   The file used for the rewritemap in the custom mediumload apache config.
+        __min_user   The minimum number mediumload will select for a website user id.
+        __max_user   The maximum number mediumload will select for a website user id.
+        __min_port   The minimum number mediumload will select for a website listening port.
+        __max_port   The maximum number mediumload will select for a website listening port.
+        __docroot    The document root in apache.
+        __portmap    The file used for the rewritemap in the custom mediumload apache config.
+        __apacheg    The group ID apache uses.
+        __fpm_path   The path to the php-fpm binary.
+        __fpm_ini    The path to the php-fpm php.ini file.
+        __config_fpm The file name of the php-fpm configuration file.
+        __config_pid The file name of the file containing the php-fpm process id.
+
+    Public functions:
+        start()      Starts the php-fpm process.
+        stop()       Stops the php-fpm process.
+        setup()      Sets up the foundations of the website.
+        get_url()    Returns the url of the webiste.
     """
     __id = None
     __port = None
     __user = None
     __url = None
+    __config = None
 
     __valid = True
     __setup = False
@@ -45,6 +59,11 @@ class website:
     __max_port = 60000
     __docroot = "/usr/local/htdocs/"
     __portmap = "/usr/local/var/php-fpm/portmap.txt"
+    __apacheg = 2
+    __fpm_path = "/usr/sbin/php-fpm"
+    __fpm_ini = "/etc/php.ini"
+    __config_fpm = "php-fpm.conf"
+    __config_pid = "running.pid"
 
     def __init__(self, url):
         # Url from user input.
@@ -53,7 +72,7 @@ class website:
         # Connect to the database.
         self.__db = mediumcore.mediumdb()
         c = self.__db.cursor()
-        c.execute("""select id, port, user, url, created, server, invalid, setup
+        c.execute("""select id, port, user, url, created, server, invalid, setup, config
                      from websites where url = %s""", self.__url)
         result = c.fetchone()
 
@@ -64,6 +83,7 @@ class website:
             self.__user = result[2]
             self.__invalid = result[6]
             self.__setup = result[7]
+            self.__config = result[8]
             
         else:
             # Otherwise we initialize the website with available values.
@@ -107,7 +127,7 @@ class website:
             print "This website is invalid and can not be setup."
             return
 
-        if self.__get_setup(self.__url) == True:
+        if self.__get_setup() == True:
             print "This website has already been sucessfully set up and can not be setup again."
             return
 
@@ -117,13 +137,28 @@ class website:
             self.__setup_folders()
 
             # Wow! Such magic!
-            cycle_pupet()
+            #cycle_puppet()
 
             self.__set_setup(True)
         except:
             print "There was an error while setting up this website. It has been marked invalid."
             traceback.print_exc()
             self.__set_valid(False)
+
+    def start(self):
+        """Starts up a website. Running the php-fpm processes with the necesary configuration.
+        Only works for sites that are valid and setup."""
+        if self.__get_valid() and self.__get_setup():
+            subprocess.check_call(["/usr/bin/sudo", "-u", str(self.__user), self.__fpm_path,
+                                   "-c", self.__fpm_ini,
+                                   "-y", self.__config + self.__config_fpm])
+
+    def stop(self):
+        """Stops a currently running website by killing its php-fpm process."""
+        with open(self.__config + self.__config_pid, 'r') as pidfile:
+            pid = pidfile.read()
+            pid = pid.strip()
+            os.kill(int(pid), signal.SIGTERM)
 
     def __setup_user(self):
         # The username will be the same as the user id.
@@ -137,7 +172,7 @@ class website:
 
     def __setup_folders(self):
         os.chmod(self.__docroot + self.__url, 0750)
-        os.chown(self.__docroot + self.__url, self.__user, 0)
+        os.chown(self.__docroot + self.__url, self.__user, self.__apacheg)
         return
 
     def __get_valid(self):
@@ -170,7 +205,7 @@ class website:
         self.__db.commit()
         return
 
-    def __get_setup(self, url):
+    def __get_setup(self):
         if self.__setup:
             return True
         else:
@@ -182,5 +217,18 @@ class website:
             else:
                 return False
 
-test_site = website("test3.appcenter123.com")
-test_site.setup()
+    def get_url(self):
+        return self.__url
+
+def get_all_websites(server=None):
+    """Gets a list of all the websites that currently exist.
+    If the server argument isn't included, then all the websites will be returned.
+    If the server argument is included, then all the websites on that servers will be returned."""    
+    result = []
+
+    db = mediumcore.mediumdb()
+    c = db.cursor()
+    c.execute("select url from websites")
+    for url in c:
+        result.append(website(url[0]))
+    return result
