@@ -69,7 +69,7 @@ class mediumload {
     source => "puppet:///modules/$module_name/mediumcore.py",
   }
 
-  file { '/usr/local/lib64/python/website.py':
+  file { '/usr/local/lib64/python/mediumwebsite.py':
     require => File['/usr/local/lib64/python/'],
     mode => 644,
     source => "puppet:///modules/$module_name/mediumwebsite.py",
