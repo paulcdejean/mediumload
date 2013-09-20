@@ -1,0 +1,68 @@
+#!/usr/bin/python
+#
+# chkconfig: - 84 16
+# description:	PHP FastCGI Process Manager
+# processname: php-fpm
+# config: /etc/php-fpm.conf
+
+# Apparently I need to implement the following:
+# start
+# stop
+# restart
+# reload
+# force-reload
+# status
+# condrestart
+# try-restart
+
+# If the input isn't one of those I want to echo something like:
+# Usage: ./ntpd {start|stop|status|restart|try-restart|force-reload}
+
+# That's convention for you.
+
+import sys
+import website
+
+def print_usage():
+    print "Usage:", sys.argv[0], "{start|stop|status|restart|try-restart|force-reload}"
+
+def start():
+    sites = website.get_all_websites()
+    for site in sites:
+        try:
+            if site.get_valid():
+                site.start()
+        except:
+            print "Website", site.get_url(), "failed to start."
+
+def stop():
+    sites = website.get_all_websites()
+    for site in sites:
+        try:
+            site.stop()
+        except:
+            print "Website", site.get_url(), "failed to stop."
+
+command = None
+if len(sys.argv) > 1:
+    command = sys.argv[1]
+else:
+    print_usage()
+    exit()
+
+if command == "start":
+    start()
+elif command == "stop":
+    stop()
+elif command == "status":
+    print "Current status is blah"
+elif command == "restart":
+    print "restarting yay"
+elif command == "try-restart":
+    print "Not implemented at this time."
+elif command == "force-reload":
+    print "Not implemented at this time."
+elif command == "condrestart":
+    print "Not implemented at this time."
+else:
+    print_usage()
