@@ -9,7 +9,7 @@ import signal
 # Medium load modules.
 import mediumcore
 
-class website:
+class mediumwebsite:
     """A website managed by mediumload.
 
     Attributes:
@@ -262,5 +262,5 @@ def get_all_websites(server=None):
     c = db.cursor()
     c.execute("select url from websites")
     for url in c:
-        result.append(website(url[0]))
+        result.append(mediumwebsite(url[0]))
     return result

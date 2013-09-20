@@ -62,5 +62,17 @@ class mediumload {
     mode => 755,
     ensure => directory,
   }
+
+  file { '/usr/local/lib64/python/mediumcore.py':
+    require => File['/usr/local/lib64/python/'],
+    mode => 644,
+    source => "puppet:///modules/$module_name/mediumcore.py",
+  }
+
+  file { '/usr/local/lib64/python/website.py':
+    require => File['/usr/local/lib64/python/'],
+    mode => 644,
+    source => "puppet:///modules/$module_name/website.py",
+  }
 }
 
