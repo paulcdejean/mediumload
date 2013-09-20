@@ -51,6 +51,16 @@ class mediumload {
     owner => "root",
     group => "daemon",
     mode => 640,
-  }  
+  }
+
+  file { '/usr/lib/python2.6/site-packages/mediumload.pth':
+    mode => 644,
+    source => "puppet:///modules/$module_name/mediumload.pth",
+  }
+
+  file { '/usr/local/lib64/python/':
+    mode => 755,
+    ensure => directory,
+  }
 }
 
