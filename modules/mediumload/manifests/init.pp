@@ -3,7 +3,7 @@ class mediumload {
   include phpfpm
   if $medium_config == "false" {
     file { "/etc/mediumload.conf.example":
-      mode => 644,
+      mode => 600,
       source => "puppet:///modules/$module_name/mediumload.conf.example",
     }
     
@@ -72,7 +72,10 @@ class mediumload {
   file { '/usr/local/lib64/python/website.py':
     require => File['/usr/local/lib64/python/'],
     mode => 644,
-    source => "puppet:///modules/$module_name/website.py",
+    source => "puppet:///modules/$module_name/mediumwebsite.py",
+  }
+
+  package { 'MySQL-python':
+    ensure => installed,
   }
 }
-
