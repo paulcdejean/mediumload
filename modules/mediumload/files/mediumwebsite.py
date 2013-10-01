@@ -182,6 +182,7 @@ class mediumwebsite:
     def __setup_rewritemap(self):
         with open(self.__portmap, 'a') as portmap:
             portmap.write(self.__url + ' ' + str(self.__port) + '\n')
+        subprocess.check_call(["/usr/local/bin/httxt2dbm", "-i", self.__config_base + "portmap.txt", "-o", self.__config_base + "portmap.dbm"])
 
     def __setup_folders(self):
         web_folder = self.__docroot + self.__url
