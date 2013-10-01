@@ -149,9 +149,6 @@ class mediumwebsite:
             self.__setup_folders()
             self.__setup_config()
 
-            # Wow! Such magic!
-            #cycle_puppet()
-
             self.__set_setup(True)
         except:
             print "There was an error while setting up this website. It has been marked invalid."
