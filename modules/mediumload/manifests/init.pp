@@ -75,6 +75,11 @@ class mediumload {
     source => "puppet:///modules/$module_name/mediumwebsite.py",
   }
 
+  file { '/usr/local/etc/php-fpm.conf':
+    mode => 644,
+    source => "puppet:///modules/$module_name/php-fpm.conf",
+  }
+
   package { 'MySQL-python':
     ensure => installed,
   }

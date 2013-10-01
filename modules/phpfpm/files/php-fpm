@@ -21,13 +21,13 @@
 # That's convention for you.
 
 import sys
-import website
+import mediumwebsite
 
 def print_usage():
     print "Usage:", sys.argv[0], "{start|stop|status|restart|try-restart|force-reload}"
 
 def start():
-    sites = website.get_all_websites()
+    sites = mediumwebsite.get_all_websites()
     for site in sites:
         try:
             if site.get_valid():
@@ -36,7 +36,7 @@ def start():
             print "Website", site.get_url(), "failed to start."
 
 def stop():
-    sites = website.get_all_websites()
+    sites = mediumwebsite.get_all_websites()
     for site in sites:
         try:
             site.stop()
