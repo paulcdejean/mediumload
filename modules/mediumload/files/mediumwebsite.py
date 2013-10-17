@@ -5,6 +5,7 @@ import subprocess
 import traceback
 import os
 import signal
+import shutil
 
 # Medium load modules.
 import mediumcore
@@ -248,7 +249,47 @@ class mediumwebsite:
                 return False
 
     def get_url(self):
+        """Access function for the URL."""
         return self.__url
+
+    def delete(self):
+        """Deletes an already existing site. The site doesn't necessarily have to be setup or valid.
+        For safety it won't delete a site that is currently running. The site has to be stopped with stop() before it can be deleted."""
+        try:
+            pidfile = open(self.__config + self.__config_pid, 'r')
+            pid = pidfile.read()
+            pid = pid.strip()
+        except:
+            print "No pidfile file found, the site will be deleted"
+            pid = None
+        if pid != None and not os.kill(int(pid), 0):
+            print "Website with url", self.get_url(), "can not be deleted because it is running."
+            return
+        else:
+            print "Website with url", self.get_url(), "will be deleted."
+                
+            # Delete the config files. The web folder is deleted when the user is removed.
+            shutil.rmtree(self.__config)
+
+            # Delete rewrite map.
+            mapfile = open(self.__portmap, 'r')
+            rewriterules = mapfile.readlines()
+            mapfile.close()
+            newmap = [ rule for rule in rewriterules if not rule.startswith(self.get_url()) ]
+            os.rename(self.__portmap, self.__portmap + ".old")
+            newmapfile = open(self.__portmap, 'w')
+            newmapfile.writelines(newmap)
+            
+            # Delete user.
+            subprocess.check_call(["/usr/sbin/userdel", "-r", str(self.__user)])
+
+            # Delete database entry.
+            c = self.__db.cursor()
+            c.execute("delete from websites where url = %s", self.get_url())
+            
+            # Mark as invalid.
+            self.__set_valid(False)
+        return
 
 def get_all_websites(server=None):
     """Gets a list of all the websites that currently exist.
