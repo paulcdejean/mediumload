@@ -3,4 +3,3 @@ address  = localhost
 username = root
 password = insertyourpasswordhere
 database = mediumload
-puppetmaster = puppet

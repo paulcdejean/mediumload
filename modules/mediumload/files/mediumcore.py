@@ -69,19 +69,3 @@ class mediumdb:
 
     def commit(self):
         self.__database.commit()
-
-class puppet:
-    """The puppet backend for mediumload.
-
-    Attributes:
-        __address     The address of the puppet master.
-
-    Knobs:
-        __blah        No knobs at the moment.
-    """
-    def __init__(self):
-        conf = mediumconf()
-        self.__address = conf.get("puppetmaster")
-
-    def cycle(self):
-        print "Wow! Such magic!"
