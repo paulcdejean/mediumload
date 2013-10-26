@@ -59,9 +59,9 @@ class mediumwebsite:
     __setup = False
     __db = None
 
-    __min_user = 50000
+    __min_user = 49000
     __max_user = 60000
-    __min_port = 50000
+    __min_port = 49000
     __max_port = 60000
     __docroot = "/usr/local/htdocs/"
     __portmap = "/usr/local/var/php-fpm/portmap.txt"
