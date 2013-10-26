@@ -172,10 +172,13 @@ class mediumwebsite:
 
     def stop(self):
         """Stops a currently running website by killing its php-fpm process."""
-        with open(self.__config + self.__config_pid, 'r') as pidfile:
-            pid = pidfile.read()
-            pid = pid.strip()
-            os.kill(int(pid), signal.SIGTERM)
+        try:
+            with open(self.__config + self.__config_pid, 'r') as pidfile:
+                pid = pidfile.read()
+                pid = pid.strip()
+                os.kill(int(pid), signal.SIGTERM)
+        except:
+            print self.get_url(), "could not be stopped, possibly because it isn't running."
 
     def __setup_user(self):
         # The username will be the same as the user id.
@@ -258,6 +261,14 @@ class mediumwebsite:
         """Access function for the URL."""
         return self.__url
 
+    def get_docroot(self):
+        """Access function for the docroot."""
+        return self.__docroot + self.__url
+
+    def get_user(self):
+        """Access function for the user."""
+        return self.__user
+
     def delete(self):
         """Deletes an already existing site. The site doesn't necessarily have to be setup or valid.
         For safety it won't delete a site that is currently running. The site has to be stopped with stop() before it can be deleted."""
@@ -275,7 +286,10 @@ class mediumwebsite:
             print "Website with url", self.get_url(), "will be deleted."
                 
             # Delete the config files. The web folder is deleted when the user is removed.
-            shutil.rmtree(self.__config)
+            try:
+                shutil.rmtree(self.__config)
+            except:
+                print "Config files for", self.get_url(), "could not be deleted. Manual cleanup may be necessary."
 
             # Delete rewrite map.
             mapfile = open(self.__portmap, 'r')
@@ -287,7 +301,10 @@ class mediumwebsite:
             newmapfile.writelines(newmap)
             
             # Delete user.
-            subprocess.check_call(["/usr/sbin/userdel", "-r", str(self.__user)])
+            try:
+                subprocess.check_call(["/usr/sbin/userdel", "-r", str(self.__user)])
+            except:
+                print "User for", self.get_url(), "could not be deleted. Manual cleanup may be necessary."
 
             # Delete database entry.
             c = self.__db.cursor()
