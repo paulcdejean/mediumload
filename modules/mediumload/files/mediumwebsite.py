@@ -100,17 +100,23 @@ class mediumwebsite:
             # Otherwise we initialize the website with available values.
             c = self.__db.cursor()
             c.execute("select user, port from websites")
+
+            # We create a sorted user list, then increment until we have an unused user.
             self.__user = self.__min_user
+            user_list = []
             for user in c:
-                if user[0] != self.__user:
-                    break
-                self.__user += 1
+                user_list.append(user[1])
+            user_list.sort()
+            while self.__user in user_list:
+                self.__user = self.__user + 1
 
             self.__port = self.__min_port
+            port_list = []
             for port in c:
-                if port[1] != self.__port:
-                    break
-                self.__port += 1
+                port_list.append(port[1])
+            port_list.sort()
+            while self.__port in port_list:
+                self.__port = self.__port + 1
 
             self.__config = self.__config_base + self.__url + "/"
 
@@ -120,7 +126,7 @@ class mediumwebsite:
                           values(%s, %s, %s, %s, CURDATE())""", 
                           (self.__port, self.__user, self.__url, self.__config))
             except:
-                print "The website could not be initialized due to an error in the data."
+                print "The website", self.get_url(), "could not be initialized due to an error in the data."
                 traceback.print_exc()
                 return
 
