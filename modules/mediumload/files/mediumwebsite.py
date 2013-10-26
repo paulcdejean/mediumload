@@ -140,7 +140,7 @@ class mediumwebsite:
             print "This website is invalid and can not be setup."
             return
 
-        if self.__get_setup() == True:
+        if self.get_setup() == True:
             print "This website has already been sucessfully set up and can not be setup again."
             return
 
@@ -159,7 +159,7 @@ class mediumwebsite:
     def start(self):
         """Starts up a website. Running the php-fpm processes with the necesary configuration.
         Only works for sites that are valid and setup."""
-        if self.get_valid() and self.__get_setup():
+        if self.get_valid() and self.get_setup():
             subprocess.check_call(["/usr/bin/sudo", "-n", "-u", str(self.__user), self.__fpm_path,
                                    "-c", self.__fpm_ini,
                                    "-y", self.__config + self.__config_fpm])
@@ -236,7 +236,7 @@ class mediumwebsite:
         self.__db.commit()
         return
 
-    def __get_setup(self):
+    def get_setup(self):
         if self.__setup:
             return True
         else:
