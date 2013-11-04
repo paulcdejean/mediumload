@@ -495,7 +495,19 @@ SSLRandomSeed connect builtin
 #RequestHeader unset DNT env=bad_DNT
 #</IfModule>
 
-RewriteEngine on
-RewriteMap portmap dbm:/usr/local/var/php-fpm/portmap.dbm
-RewriteRule ^/(.*?)/(.*\.php) fcgi://127.0.0.1:${portmap:$1}/usr/local/htdocs/$1/$2 [P]
-#LogLevel alert rewrite:trace3
+<VirtualHost *:80>
+    RewriteEngine on
+    RewriteMap portmap dbm:/usr/local/var/php-fpm/portmap.dbm
+    RewriteRule ^/(.*?)/(.*\.php) fcgi://127.0.0.1:${portmap:$1}/usr/local/htdocs/$1/$2 [P]
+    #LogLevel alert rewrite:trace3
+
+    ServerName <%= fqdn %>
+    DocumentRoot /usr/local/htdocs
+</VirtualHost>
+
+<VirtualHost *:80>
+    # This isn't pretty but it will have to do for now.
+    ServerName civicrm.<%= fqdn %>
+    DocumentRoot /usr/local/htdocs
+    Redirect / http://<%= fqdn %>/
+</VirtualHost>

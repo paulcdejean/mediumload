@@ -14,7 +14,7 @@ class apache24 {
   file { "/usr/local/conf/httpd.conf":
     require => Package['httpd'],
     mode => 644,
-    source => "puppet:///modules/$module_name/httpd.conf",
+    content => template("$module_name/httpd.conf.erb"),
   }
 
   file { '/etc/init.d/httpd':
