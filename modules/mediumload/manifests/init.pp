@@ -83,4 +83,12 @@ class mediumload {
   package { 'MySQL-python':
     ensure => installed,
   }
+
+  file { '/usr/local/sbin/mediumbackup.py':
+    require => [File['/usr/local/lib64/python/mediumwebsite.py'],
+                File['/usr/local/lib64/python/mediumcore.py']],
+    mode => 755,
+    source => "puppet:///modules/$module_name/mediumbackup.py",
+  }
+
 }
