@@ -95,7 +95,7 @@ class mediumload {
     require => File['/usr/local/sbin/mediumbackup.py'],
     command => "/usr/local/sbin/mediumbackup.py",
     user    => root,
-    hour    => 2,
+    hour    => 1,
     minute  => 0
   }
 }
