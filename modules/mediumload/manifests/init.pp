@@ -91,4 +91,11 @@ class mediumload {
     source => "puppet:///modules/$module_name/mediumbackup.py",
   }
 
+  cron { database_backup:
+    require => File['/usr/local/sbin/mediumbackup.py'],
+    command => "/usr/local/sbin/mediumbackup.py",
+    user    => root,
+    hour    => 2,
+    minute  => 0
+  }
 }
