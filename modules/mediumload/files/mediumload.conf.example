@@ -3,4 +3,4 @@ address  = localhost
 username = root
 password = insertyourpasswordhere
 database = mediumload
-backup_dir = /home/backup/database/
+backup_dir = /home/backup/
