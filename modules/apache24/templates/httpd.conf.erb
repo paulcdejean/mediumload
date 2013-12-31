@@ -504,10 +504,3 @@ SSLRandomSeed connect builtin
     ServerName <%= fqdn %>
     DocumentRoot /usr/local/htdocs
 </VirtualHost>
-
-<VirtualHost *:80>
-    # This isn't pretty but it will have to do for now.
-    ServerName civicrm.<%= fqdn %>
-    DocumentRoot /usr/local/htdocs
-    Redirect / http://<%= fqdn %>/
-</VirtualHost>

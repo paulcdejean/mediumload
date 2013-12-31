@@ -75,6 +75,23 @@ class mediumload {
     source => "puppet:///modules/$module_name/mediumwebsite.py",
   }
 
+  file { '/usr/local/sbin/create_site.py':
+    mode => 755,
+    source => "puppet:///modules/$module_name/create_site.py",
+  }
+  file { '/usr/local/sbin/delete_site.py':
+    mode => 755,
+    source => "puppet:///modules/$module_name/delete_site.py",
+  }
+  file { '/usr/local/sbin/start_site.py':
+    mode => 755,
+    source => "puppet:///modules/$module_name/start_site.py",
+  }
+  file { '/usr/local/sbin/stop_site.py':
+    mode => 755,
+    source => "puppet:///modules/$module_name/stop_site.py",
+  }
+  
   file { '/usr/local/etc/php-fpm.conf':
     mode => 644,
     source => "puppet:///modules/$module_name/php-fpm.conf",
