@@ -202,7 +202,8 @@ class mediumwebsite:
         # Remove everything that was copied from skel.
         os.chdir(web_folder)
         for useless_file in os.listdir(web_folder):
-            os.unlink(useless_file)
+            if not os.path.isdir(useless_file):
+                os.unlink(useless_file)
         return
 
     def __setup_config(self):

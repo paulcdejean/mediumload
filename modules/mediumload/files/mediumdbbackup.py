@@ -5,7 +5,7 @@ import os
 import subprocess
 
 conf = mediumcore.mediumconf()
-backup_dir = conf.get("backup_dir")
+backup_dir = conf.get("backup_dir") + "database/"
 
 today = datetime.date.today().isoformat()
 today_backup = backup_dir + today + "/"
