@@ -11,6 +11,10 @@ class apache24 {
     source => "/tmp/httpd-2.4.4_x86_64.rpm",
   }
 
+  $subdomains = hiera('subdomains')
+
+#  notify{ $subdomains[0][url] :}
+  
   file { "/usr/local/conf/httpd.conf":
     require => Package['httpd'],
     mode => 644,
