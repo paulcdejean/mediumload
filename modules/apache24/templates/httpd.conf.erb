@@ -507,7 +507,10 @@ SSLRandomSeed connect builtin
 
 <% @subdomains.each do |subdomain| -%>
    <% subdomain.each do |url,directory| -%>
-      url = <%= url %>
-      directory = <%= directory %>
+<VirtualHost *:80>
+    # This isn't pretty but it will have to do for now.
+    ServerName <%= url %>
+    DocumentRoot /usr/local/htdocs/<%= directory %>
+</VirtualHost>
    <% end -%>
 <% end -%>
