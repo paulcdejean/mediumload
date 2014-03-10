@@ -1,0 +1,5 @@
+---
+subdomains:
+      - "civicrm.appcenter123.com" : "redirect1"
+      - "civiplatform.appcenter123.com" : "redirect2"
+      - "civi.nyi.radiomaria.us" : "redirect3"
