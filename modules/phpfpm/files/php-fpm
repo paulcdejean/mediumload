@@ -43,7 +43,7 @@ def stop():
     for site in sites:
         try:
             site_object = mediumwebsite.mediumwebsite(site)
-            site.stop()
+            site_object.stop()
         except:
             traceback.print_exc()
             print "Website", site, "failed to stop."
