@@ -324,6 +324,12 @@ def get_all_websites(server=None):
     db = mediumcore.mediumdb()
     c = db.cursor()
     c.execute("select url from websites")
-    for url in c:
-        result.append(mediumwebsite(url[0]))
+
+    # For loops on the cursor object were freezing.
+    # I have no idea why they would do that, but this seems to not freeze.
+    current_row = c.fetchone()
+    while current_row:
+        result.append(current_row[0])
+        current_row = c.fetchone()
+
     return result

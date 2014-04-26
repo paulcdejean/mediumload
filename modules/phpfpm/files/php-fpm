@@ -22,6 +22,7 @@
 
 import sys
 import mediumwebsite
+import traceback
 
 def print_usage():
     print "Usage:", sys.argv[0], "{start|stop|status|restart|try-restart|force-reload}"
@@ -30,18 +31,22 @@ def start():
     sites = mediumwebsite.get_all_websites()
     for site in sites:
         try:
-            if site.get_valid():
-                site.start()
+            site_object = mediumwebsite.mediumwebsite(site)
+            if site_object.get_valid():
+                site_object.start()
         except:
-            print "Website", site.get_url(), "failed to start."
+            traceback.print_exc()
+            print "Website", site, "failed to start."
 
 def stop():
     sites = mediumwebsite.get_all_websites()
     for site in sites:
         try:
-            site.stop()
+            site_object = mediumwebsite.mediumwebsite(site)
+            site_object.stop()
         except:
-            print "Website", site.get_url(), "failed to stop."
+            traceback.print_exc()
+            print "Website", site, "failed to stop."
 
 command = None
 if len(sys.argv) > 1:

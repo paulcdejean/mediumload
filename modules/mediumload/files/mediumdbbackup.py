@@ -3,6 +3,7 @@ import mediumcore
 import datetime
 import os
 import subprocess
+import shutil
 
 conf = mediumcore.mediumconf()
 backup_dir = conf.get("backup_dir") + "database/"
@@ -23,3 +24,7 @@ for db, in c:
                                "-h", conf.get("address"), "-u", conf.get("username"), "--password=" + conf.get("password"), db], 
                               stdout = outfile)
     print db
+
+subprocess.check_call(["tar", "-cvzf", backup_dir + today + ".tar.gz", today_backup + "/"])
+
+shutil.rmtree(today_backup)
