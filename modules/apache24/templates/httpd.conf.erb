@@ -495,13 +495,31 @@ SSLRandomSeed connect builtin
 #RequestHeader unset DNT env=bad_DNT
 #</IfModule>
 
+LoadModule ssl_module modules/mod_ssl.so
+
+Listen 443
+<VirtualHost *:443>
+    ServerName <%= domain_name %>
+    SSLEngine on
+    SSLCertificateFile <%= cert_path %>
+    SSLCertificateKeyFile <%= key_path %>
+
+    RewriteEngine on
+    RewriteMap portmap dbm:/usr/local/var/php-fpm/portmap.dbm
+    RewriteRule ^/(.*?)/(.*\.php) fcgi://127.0.0.1:${portmap:$1}/usr/local/htdocs/$1/$2 [P]
+    #LogLevel alert rewrite:trace3
+
+    DocumentRoot /usr/local/htdocs
+</VirtualHost>
+
+
 <VirtualHost *:80>
     RewriteEngine on
     RewriteMap portmap dbm:/usr/local/var/php-fpm/portmap.dbm
     RewriteRule ^/(.*?)/(.*\.php) fcgi://127.0.0.1:${portmap:$1}/usr/local/htdocs/$1/$2 [P]
     #LogLevel alert rewrite:trace3
 
-    ServerName <%= fqdn %>
+    ServerName <%= domain_name %>
     DocumentRoot /usr/local/htdocs
 </VirtualHost>
 

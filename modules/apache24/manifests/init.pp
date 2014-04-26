@@ -12,8 +12,11 @@ class apache24 {
   }
 
   $subdomains = hiera('subdomains')
-
-#  notify{ $subdomains[0][url] :}
+  $domain_name = hiera('domain_name')
+  $cert_path = hiera('cert_path')
+  $key_path = hiera('key_path')
+  
+  notify{ $domain_name :}
   
   file { "/usr/local/conf/httpd.conf":
     require => Package['httpd'],
