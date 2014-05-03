@@ -129,5 +129,11 @@ class mediumload {
     user    => root,
     hour    => 1,
     minute  => 0
-  }  
+  }
+
+  # Required for php-fpm to start at startup.
+  file_line { 'root_sudo_notty':
+    path  => '/etc/sudoers',
+    line  => 'Defaults:root !requiretty',
+  }
 }
