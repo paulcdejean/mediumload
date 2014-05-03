@@ -36,4 +36,17 @@ class apache24 {
     enable => true,
     subscribe => File['/usr/local/conf/httpd.conf'],
     }
+
+  # Gotta open the relevant ports.
+  firewall { '301 Accept http.':
+    port   => 22,
+    proto  => tcp,
+    action => accept,
+  }
+  
+  firewall { '302 Accept https.':
+    port   => 443,
+    proto  => tcp,
+    action => accept,
+  }  
 }
