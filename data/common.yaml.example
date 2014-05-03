@@ -1,0 +1,10 @@
+---
+subdomains:
+      - "website1.example.com" : "redirect1"
+      - "website2.example.com" : "redirect2"
+      - "website3.example.com" : "redirect3"
+
+domain_name: example.com
+
+cert_path: /usr/local/conf/sample_ssl.crt
+key_path: /usr/local/conf/sample_ssl.key
