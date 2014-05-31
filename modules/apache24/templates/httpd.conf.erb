@@ -521,6 +521,9 @@ Listen 443
 
     ServerName <%= domain_name %>
     DocumentRoot /usr/local/htdocs
+
+    # Force https.
+    Redirect permanent / https://<%= domain_name %>/
 </VirtualHost>
 
 <% @subdomains.each do |subdomain| -%>

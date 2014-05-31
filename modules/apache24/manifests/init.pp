@@ -39,7 +39,7 @@ class apache24 {
 
   # Gotta open the relevant ports.
   firewall { '301 Accept http.':
-    port   => 22,
+    port   => 80,
     proto  => tcp,
     action => accept,
   }
