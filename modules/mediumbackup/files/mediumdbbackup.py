@@ -13,6 +13,8 @@ today_backup = backup_dir + today + "/"
 if not os.path.exists(today_backup):
     os.makedirs(today_backup)
 
+backup_name = conf.get("domain_name") + "_" + today + "_database"
+
 os.chdir(today_backup)
 
 server = mediumcore.mediumdb()
@@ -25,6 +27,7 @@ for db, in c:
                               stdout = outfile)
     print db
 
-subprocess.check_call(["tar", "-cvzf", backup_dir + today + ".tar.gz", today_backup + "/"])
+#subprocess.check_call(["tar", "-cvzf", backup_dir + today + ".tar.gz", today_backup + "/"])
+subprocess.check_call(["/usr/local/bin/tarsnap", "-c", "-f", backup_name, "."])
 
 shutil.rmtree(today_backup)
