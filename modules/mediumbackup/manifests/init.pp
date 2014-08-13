@@ -4,6 +4,26 @@ class mediumbackup {
   package { 'glibc-devel':
     ensure => installed,
   }
+
+  # Everything in the "Development tools" group in yum on Centos.
+  $devtools = [ "autoconf",
+                "automake",
+                "binutils",
+                "bison",
+                "flex",
+                "gcc",
+                "gcc-c++",
+                "gettext",
+                "libtool",
+                "make",
+                "patch",
+                "pkgconfig",
+                "redhat-rpm-config",
+                "rpm-build",
+                ]
+  
+  package { $devtools: ensure => "installed" }
+
   package { 'openssl-devel':
     ensure => installed,
   }
