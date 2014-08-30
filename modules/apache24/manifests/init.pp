@@ -1,14 +1,14 @@
 class apache24 {
-  file { "/tmp/httpd-2.4.4_x86_64.rpm":
+  file { "/tmp/httpd-2.4.10_x86_64.rpm":
     mode => 644,
-    source => "puppet:///modules/$module_name/httpd-2.4.4_x86_64.rpm",
+    source => "puppet:///modules/$module_name/httpd-2.4.10_x86_64.rpm",
   }
   
   package { 'httpd':
-    require => File["/tmp/httpd-2.4.4_x86_64.rpm"],
+    require => File["/tmp/httpd-2.4.10_x86_64.rpm"],
     provider => 'rpm',
     ensure => installed,
-    source => "/tmp/httpd-2.4.4_x86_64.rpm",
+    source => "/tmp/httpd-2.4.10_x86_64.rpm",
   }
 
   $subdomains = hiera('subdomains')
